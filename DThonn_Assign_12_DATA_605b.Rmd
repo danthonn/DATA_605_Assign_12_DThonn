@@ -1,0 +1,257 @@
+---
+title: "DATA_605_Assign_12_DThonn"
+file: DATA_605_Assign_12_DThonn
+name: Daniel Thonn
+output:
+  html_document: default
+  pdf_document: default
+course: DATA 605 CUNY MSDA program
+---
+
+** DATA_605_Discussion_12_Regression_2 **
+
+http://rpubs.com/danthonn/382369
+
+** Real World Data **
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``````{r, echo=TRUE}
+if (!require(RCurl)) install.packages("RCurl")
+if (!require(stringr)) install.packages("stringr")
+library(RCurl)
+library(stringr)
+library(knitr)
+
+if (!require(tidyr)) install.packages("tidyr")
+if (!require(dplyr)) install.packages("dplyr")
+library(tidyr)
+library(dplyr)
+
+if (!require(gvlma)) install.packages("gvlma")
+library(gvlma)
+
+
+```
+
+
+** Assign_12_Regression_Real_World Data **
+
+The attached who.csv dataset contains real-world data from 2008. The variables included follow.
+Country: name of the country
+LifeExp: average life expectancy for the country in years
+InfantSurvival: proportion of those surviving to one year or more
+Under5Survival: proportion of those surviving to five years or more
+TBFree: proportion of the population without TB.
+PropMD: proportion of the population who are MDs
+PropRN: proportion of the population who are RNs
+PersExp: mean personal expenditures on healthcare in US dollars at average exchange rate
+GovtExp: mean government expenditures per capita on healthcare, US dollars at average exchange rate
+TotExp: sum of personal and government expenditures.
+1. Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss whether the assumptions of simple linear regression met.
+2. Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and r re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R^2, standard error, and p-values. Which model is "better?"
+3. Using the results from 3, forecast life expectancy when TotExp^.06 =1.5. Then forecast life expectancy when TotExp^.06=2.5.
+4. Build the following multiple regression model and interpret the F Statistics, R^2, standard error, and p-values. How good is the model?
+LifeExp = b0+b1 x PropMd + b2 x TotExp +b3 x PropMD x TotExp
+5. Forecast LifeExp when PropMD=.03 and TotExp = 14. Does this forecast seem realistic? Why or why not?
+
+
+``````{r, echo=TRUE}
+
+url <- 'https://raw.githubusercontent.com/danthonn/DATA_605_Assign_12_DThonn/master/who.csv'
+
+who1 <- read.csv(url)
+
+str(who1)
+
+glimpse(who1)
+
+head(who1)
+
+kable(head(who1))
+
+```
+
+
+
+** Question-1 **
+
+1. Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss whether the assumptions of simple linear regression met.
+
+
+``````{r, echo=TRUE}
+# Question-1 Answer:
+
+
+# a simple linear regression - who1
+lm_who1 <- lm(who1$LifeExp ~ who1$TotExp)
+# a scatter plot - who1
+plot(who1$LifeExp, who1$TotExp, main="Scatterplot", 
+    xlab="LifeExp", ylab="TotExp", pch=19) 
+abline(lm_who1, col = "blue")
+
+
+
+
+# the residuals - who1
+hist(resid(lm_who1), main = "Histogram - Residuals", xlab = "residuals")
+
+# summary - who1
+summary(lm_who1)
+
+
+
+```
+
+Interpretations-1:
+Plot: line does not appear linear and is sharply curved upward after LifeExp = 75.
+F statistics: large at 65.26.  reject null hypothesis and no relationship between variables.
+R^2: R^2 is small at .2577.  Only 25% of response variable explained by the independant variable.
+standard error: at 9.3 is large, indicating how much the avg. response variable deviates from the regression line.
+p-values: near zero.  probability of observing this relationship is small.
+
+
+** Question-2 **
+
+2. Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and r re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R^2, standard error, and p-values. Which model is "better?"
+
+``````{r, echo=TRUE}
+# Question-2 Answer:
+# a simple linear regression - who2
+LifeExp4.6 <- who1$LifeExp^4.6
+TotExp0.06 <- who1$TotExp^0.06
+lm_who2 <- lm(LifeExp4.6 ~ TotExp0.06)
+
+# scatter plot - who2
+plot(TotExp0.06, LifeExp4.6)
+abline(lm_who2, col="blue")
+
+
+# residuals - who2
+hist(resid(lm_who2), main = "Histogram - Residuals", xlab = "residuals")
+
+# summary - who2
+summary(lm_who2)
+
+```
+
+Interpretations-2:
+Plot: regression line does appear linear
+F statistics: larger at 507.7 and higher than who1.  
+R^2: R^2 is larger at .7283.  73% of response variable explained by the independant variable.
+standard error: at 90490000 is large, indicating how much the avg. response variable deviates from the regression line.
+p-values:  p-value: < 2.2e-16 is statistically significant.  less than who1 model.
+histogram: near normal distribution
+
+Overall: The who2 model is much improved over the who1 model and a good linear regression fit.
+
+
+** Question-3 **
+
+3. Using the results from 3, forecast life expectancy when TotExp^.06 =1.5. Then forecast life expectancy when TotExp^.06=2.5.
+
+
+Then forecast life expectancy when TotExp^.06=2.5.
+y=-736527910+620060216x
+lifeexpectancy=y(1/4.6)
+
+
+
+``````{r, echo=TRUE}
+
+life_ex <- function(x)
+{   z <- -736527910 + 620060216 * (x)
+    z <- z^(1/4.6)
+    print(z)
+}
+# Life expectancy with TotExp^.06 =1.5
+life_ex(1.5)
+## [1] 63.31153
+# Life expectancy with TotExp^.06 =2.5
+life_ex(2.5)
+## [1] 86.50645
+
+
+
+```
+
+
+
+** Question-4 **
+
+4. Build the following multiple regression model and interpret the F Statistics, R^2, standard error, and p-values. How good is the model?
+LifeExp = b0+b1 x PropMd + b2 x TotExp +b3 x PropMD x TotExp
+
+``````{r, echo=TRUE}
+lm_4 <- lm(who1$LifeExp ~ who1$PropMD + who1$TotExp + who1$PropMD*who1$TotExp)
+summary(lm_4)
+
+hist(resid(lm_4), main = "Histogram - Residuals", xlab = "residuals")
+
+plot(fitted(lm_4), resid(lm_4))
+
+# Call:
+# lm(formula = who1$LifeExp ~ who1$PropMD + who1$TotExp + who1$PropMD * 
+#     who1$TotExp)
+# 
+# Residuals:
+#     Min      1Q  Median      3Q     Max 
+# -27.320  -4.132   2.098   6.540  13.074 
+# 
+# Coefficients:
+#                           Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)              6.277e+01  7.956e-01  78.899  < 2e-16 ***
+# who1$PropMD              1.497e+03  2.788e+02   5.371 2.32e-07 ***
+# who1$TotExp              7.233e-05  8.982e-06   8.053 9.39e-14 ***
+# who1$PropMD:who1$TotExp -6.026e-03  1.472e-03  -4.093 6.35e-05 ***
+# ---
+# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+# 
+# Residual standard error: 8.765 on 186 degrees of freedom
+# Multiple R-squared:  0.3574,	Adjusted R-squared:  0.3471 
+# F-statistic: 34.49 on 3 and 186 DF,  p-value: < 2.2e-16
+
+```
+
+Interpretations-4:
+
+1). p-value is less than .05, therefore model is statistically significant. 
+2). F-statistic is 34.49 on 3
+3). Based on Rsquare only 34.7% of the variability can be explained by the 3 variables.
+4). Residuals are right skewed. There, the linear model is not a good fit.
+
+** Question-5 **
+
+5. Forecast LifeExp when PropMD=.03 and TotExp = 14. Does this forecast seem realistic? Why or why not?
+
+LifeExp=(6.277 * 10^1) +(1.497 * 10^3) * PropMD + (7.233 * 10^(-5) *
+TotExp - ((6.026 * 10^(-3) * PropMD * TotExp 
+
+
+``````{r, echo=TRUE}
+
+LifeExp5 <- ( (6.277*10^1) + (1.497*10^3)*.03 + (7.233*10^(-5))* 14 - ((6.026*10^(-3))*0.03*14) ) 
+LifeExp5
+## [1] 107.6785
+ 
+
+
+```
+
+Interpretations-5:
+1). The forecast age of 107.6 is an outlier and is unlikely. 
+2). The expenditure is also low.
+
+
+** END **
+
+
+``````{r, echo=TRUE}
+
+```
+
+
